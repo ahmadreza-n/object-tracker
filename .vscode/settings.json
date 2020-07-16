@@ -2,5 +2,6 @@
   "files.associations": {
     "*.twig": "html",
     "thread": "cpp"
-  }
+  },
+  "python.pythonPath": "/home/ahmadreza/.virtualenvs/cv/bin/python"
 }
