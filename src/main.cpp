@@ -1,61 +1,76 @@
 #include <Arduino.h>
 #include <Servo.h>
+// #include <LiquidCrystal_I2C.h> // Library for LCD
+// #include <Wire.h> // Library for I2C communication
+
+// LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x3F, 16, 2); // Change to (0x27,16,2) for 16x2 LCD.
 
 Servo tilt; // Ver
 Servo pan;  // Hor
 
 String input;
 
-int SAMPLETIME = 50;
+int SAMPLETIME = 6;
+const float H_GAIN{0.1}, W_GAIN{0.1};
+
+int tiltDeg{}, panDeg{};
 
 void setPropotionalDeg();
-void setErrDeg();
 
 void setup()
 {
+  // Wire.begin(12, 13);
+  // lcd.begin();
+
+  // lcd.home();
+  // lcd.print("LCD initialized");
+
   tilt.write(3);
   tilt.attach(5);
 
   pan.write(90);
   pan.attach(4);
 
-  Serial.begin(115200);
-  Serial.print("ready");
+  Serial.begin(9600);
+  Serial.print("Serial initialized.");
 }
 
 void loop()
 {
   if (Serial.available())
   {
-    input = Serial.readString();
-    // Serial.println("Input data: " + input);
+    // input = "";
+    // while (Serial.available())
+    // {
+    //   char ch = Serial.read();
+    //   input += String(ch);
+    // }
+
+    input = Serial.readStringUntil('$');
+
+    String tiltIn{}, panIn{};
+    for (size_t i = 0; i < input.length(); i++)
+    {
+      if (input.charAt(i) == ' ')
+      {
+        tiltIn = input.substring(0, i);
+        panIn = input.substring(i + 1, input.length());
+      }
+    }
+    tiltDeg = tiltIn.toInt();
+    panDeg = panIn.toInt();
 
     setPropotionalDeg();
-    // setErrDeg();
-    Serial.print("ready");
+    Serial.write("#");
   }
 }
 
 void setPropotionalDeg()
 {
-  String tiltIn, panIn;
-  for (size_t i = 0; i < input.length(); i++)
-  {
-    if (input.charAt(i) == ' ')
-    {
-      tiltIn = input.substring(0, i);
-      panIn = input.substring(i + 1);
-    }
-  }
-
-  int tiltDeg{tiltIn.toInt()}, panDeg{panIn.toInt()};
-
-  // if (tiltDeg)
-  //   tilt.write(tilt.read() + panDeg);
-  // if (panDeg)
-  //   pan.write(pan.read() + panDeg);
-
   int tiltDegAbs{abs(tiltDeg)}, panDegAbs{abs(panDeg)};
+
+  tiltDegAbs = tiltDegAbs > (1.0 / H_GAIN) ? (tiltDegAbs * H_GAIN) : 8;
+  panDegAbs = panDegAbs > (1.0 / W_GAIN) ? (panDegAbs * W_GAIN) : 7;
 
   int maximum{max(tiltDegAbs, panDegAbs)};
   int panSign{panDeg == 0 ? 0 : panDeg / panDegAbs},
@@ -72,43 +87,5 @@ void setPropotionalDeg()
     if (panSign != 0 && i < panDegAbs)
       pan.write(panCurr + panSign * i);
     delay(SAMPLETIME);
-  }
-}
-
-void setErrDeg()
-{
-  const double k = 0.1;
-  String tiltIn, panIn;
-
-  for (size_t i = 0; i < input.length(); i++)
-  {
-    if (input.charAt(i) == ' ')
-    {
-      tiltIn = input.substring(0, i);
-      panIn = input.substring(i + 1);
-      Serial.println("Tilt err: " + tiltIn);
-      Serial.println("Pan err: " + panIn);
-    }
-  }
-
-  float tiltErr = tiltIn.toFloat();
-  float panErr = panIn.toFloat();
-
-  if (tiltErr != 0)
-  {
-    for (double i = tilt.read(); i >= 3 && i <= 120; i += (tiltErr > 0))
-    {
-      tilt.write(int(i));
-      delay(int(1.0 / tiltErr));
-    }
-  }
-
-  if (panErr != 0)
-  {
-    for (double i = pan.read(); i >= 0 && i <= 180; i += k * (panErr > 0))
-    {
-      pan.write(int(i));
-      delay(int(1.0 / panErr));
-    }
   }
 }
