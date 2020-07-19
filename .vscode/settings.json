@@ -3,5 +3,7 @@
     "*.twig": "html",
     "thread": "cpp"
   },
-  "python.pythonPath": "/home/ahmadreza/.virtualenvs/cv/bin/python"
+  "python.pythonPath": "/home/ahmadreza/.virtualenvs/cv/bin/python",
+  "python.linting.pylintEnabled": true,
+  "python.linting.enabled": true
 }

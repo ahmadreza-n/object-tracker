@@ -10,7 +10,7 @@ Servo pan;  // Hor
 
 String input;
 
-int SAMPLETIME = 6;
+int SAMPLETIME = 20;
 const float H_GAIN{0.1}, W_GAIN{0.1};
 
 int tiltDeg{}, panDeg{};
