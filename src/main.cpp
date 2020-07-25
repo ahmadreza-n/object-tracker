@@ -10,7 +10,7 @@ Servo pan;  // Hor
 
 String input;
 
-int SAMPLETIME = 20;
+int SAMPLETIME = 10;
 const float H_GAIN{0.1}, W_GAIN{0.1};
 
 int tiltDeg{}, panDeg{};
@@ -25,7 +25,7 @@ void setup()
   // lcd.home();
   // lcd.print("LCD initialized");
 
-  tilt.write(3);
+  tilt.write(30);
   tilt.attach(5);
 
   pan.write(90);

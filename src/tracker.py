@@ -109,7 +109,7 @@ def commander():
     hOutput = int(hErr)
     wOutput = int(wErr)
     if serialInput and serialInput.find('#') != -1:
-      serialOutput = f'{hOutput} {wOutput * -1}$'
+      serialOutput = f'{hOutput * -1} {wOutput * -1}$'
       with lock:
         ser.write(serialOutput.encode('ascii'))
       print(f'SERIAL OUTPUT {serialOutput}')
