@@ -31,7 +31,7 @@ void setup()
   pan.write(90);
   pan.attach(4);
 
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.print("Serial initialized.");
 }
 

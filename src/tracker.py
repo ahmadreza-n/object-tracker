@@ -7,17 +7,18 @@ python opencv_object_tracking.py --video dashcam_boston.mp4 --tracker csrt
 # import the necessary packages
 import argparse
 import threading
+import logging
 from time import sleep
+import sys
 import cv2
 import serial
 from imutils.video import VideoStream
 from imutils.video import FPS
 #endregion
 
-#region var
-ser = serial.Serial('/dev/ttyUSB0', timeout=2000)
-ser.baudrate = 9600
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
+#region var
 CAM_W = 640
 CAM_H = 480
 FOV = 75 # blue dot
@@ -31,6 +32,8 @@ ap.add_argument('-v', '--video', type=str, help='path to input video file')
 ap.add_argument('-t', '--tracker', type=str, default='csrt',
                 help='''OpenCV object tracker type. Options are: csrt, kcf,
                 boosting, mil, tld, medianflow, mosse''')
+ap.add_argument('-m', '--mode', type=str, default='commander',
+ help='wether to command wemos or not')
 args = vars(ap.parse_args())
 
 # if we are using OpenCV 3.2 OR BEFORE, we can use a special factory
@@ -51,17 +54,43 @@ OPENCV_OBJECT_TRACKERS = {
 
 # grab the appropriate object tracker using our dictionary of
 # OpenCV object tracker objects
-tracker = OPENCV_OBJECT_TRACKERS[args['tracker']]()
+try:
+  tracker = OPENCV_OBJECT_TRACKERS[args['tracker']]()
+except KeyError as err:
+  logging.error('There is no such tracker %s.', args["tracker"])
+  raise err
+
+mode = args['mode']
+if mode == 'commander':
+  try:
+    ser = serial.Serial('/dev/ttyUSB0', timeout=2000)
+  except BaseException as err:
+    logging.error('Serial initialization failed. %s', err)
+    sys.exit()
+  ser.baudrate = 115200
+elif mode == 'normal':
+  logging.info('Bypassing serial initialization.')
+else:
+  logging.error('Invalid mode %s', mode)
+  sys.exit()
 
 # if a video path was not supplied, grab the reference to the web cam
 if not args.get('video', False):
-  print('[INFO] starting video stream...')
-  vs = VideoStream(src=2, resolution=(CAM_W, CAM_H), framerate=30).start()
-  sleep(1.0)
+  try:
+    logging.info('starting video stream...')
+    vs = VideoStream(src=2, resolution=(CAM_W, CAM_H), framerate=30).start()
+    sleep(1.0)
+  except Exception as err:
+    logging.error('Camera error. %s', err)
+    sys.exit()
 
 # otherwise, grab a reference to the video file
 else:
-  vs = cv2.VideoCapture(args['video'])
+  try:
+    vs = cv2.VideoCapture(args['video'])
+  except Exception as err:
+    logging.error('Loading video file %s failed. %s', args["video"], err)
+    sys.exit()
 #endregion
 
 # initialize the bounding box coordinates of the object we are going
@@ -73,7 +102,7 @@ finished = False
 
 # initialize the FPS throughput estimator
 fps = None
-fps2 = None
+cps = None
 
 lock = threading.Lock()
 
@@ -88,7 +117,7 @@ def updateFrame():
     globals()['frame'] = globals()['frame'][1] if args.get('video', False) else globals()['frame']
 
 def commander():
-  print('COMMANDER_THREAD started')
+  logging.info('COMMANDER_THREAD started')
   firstTimeFlag = True
   zeroCommandFlag = False
   while not globals()['finished']:
@@ -100,7 +129,7 @@ def commander():
         serialInput = ser.read_all()
     if serialInput:
       serialInput = serialInput.decode('ascii')
-      print(f'SERIAL INPUT {serialInput}')
+      logging.info('SERIAL INPUT %s', serialInput)
     elif firstTimeFlag or zeroCommandFlag:
       serialInput = '#'
       firstTimeFlag = False
@@ -112,31 +141,32 @@ def commander():
       serialOutput = f'{hOutput * -1} {wOutput * -1}$'
       with lock:
         ser.write(serialOutput.encode('ascii'))
-      print(f'SERIAL OUTPUT {serialOutput}')
+      logging.info('SERIAL OUTPUT %s', serialOutput)
       globals()['isCommanded'] = True
-      fps2.update()
-      fps2.stop()
+      cps.update()
+      cps.stop()
 
   with lock:
     ser.close()
-  print('COMMANDER_THREAD finished')
+  logging.info('COMMANDER_THREAD finished')
 
 
-threading.Thread(target=updateFrame, name='updateFrame', daemon=True).start()
-commandThread = threading.Thread(target=commander, name='commander', daemon=True)
-commandThread.start()
+# threading.Thread(target=updateFrame, name='updateFrame', daemon=True).start()
+if mode == 'commander':
+  commandThread = threading.Thread(target=commander, name='commander', daemon=True)
+  commandThread.start()
 
 # loop over frames from the video stream
 while frame is None:
-  pass
+  frame = vs.read()
+  frame = frame[1] if args.get('video', False) else frame
 while not finished:
-  # grab the current frame, then handle if we are using a
-  # VideoStream or VideoCapture object
-  # frame = vs.read()
-  # frame = frame[1] if args.get('video', False) else frame
-
   # check to see if we have reached the end of the stream
+  frame = vs.read()
+  frame = frame[1] if args.get('video', False) else frame
+
   if frame is None:
+    finished = True
     break
 
   # resize the frame (so we can process it faster) and grab the
@@ -155,8 +185,6 @@ while not finished:
       cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
       globals()['wErr'] = (x + w/2 - W/2)*(FOV/2)/(W/2)
       globals()['hErr'] = (y + h/2 - H/2)*(56/2)/(H/2)
-      # print(f'w err: {wErr}');
-      # print(f'h err: {hErr}');
     else:
       globals()['wErr'] = 0
       globals()['hErr'] = 0
@@ -172,7 +200,7 @@ while not finished:
         ('W Error', f'{-int(wErr)}', (0, 0, 255)),
         ('Tracker', args['tracker'], (0, 0, 0)),
         ('Success', 'Yes' if success else 'No', (0, 255, 0) if success else (0, 0, 255)),
-        ('Command Per Second', '{:.2f}'.format(fps2.fps() if isCommanded else 0), (255, 125, 0)),
+        ('Command Per Second', '{:.2f}'.format(cps.fps() if isCommanded else 0), (255, 125, 0)),
         ('FPS', '{:.2f}'.format(fps.fps()), (0, 0, 255)),
     ]
 
@@ -189,6 +217,7 @@ while not finished:
   # if the 's' key is selected, we are going to 'select' a bounding
   # box to track
   if key == ord('s'):
+    initBB = None
     # select the bounding box of the object we want to track (make
     # sure you press ENTER or SPACE after selecting the ROI)
     initBB = cv2.selectROI('Frame', frame, fromCenter=False,
@@ -198,7 +227,7 @@ while not finished:
     # coordinates, then start the FPS throughput estimator as well
     tracker.init(frame, initBB)
     fps = FPS().start()
-    fps2 = FPS().start()
+    cps = FPS().start()
     isInited = True
 
   # if the `q` key was pressed, break from the loop
@@ -216,4 +245,5 @@ else:
 # close all windows
 cv2.destroyAllWindows()
 
-commandThread.join()
+if mode == 'commander':
+  commandThread.join()
