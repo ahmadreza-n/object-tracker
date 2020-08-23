@@ -216,8 +216,7 @@ while not finished:
 
   # if the 's' key is selected, we are going to 'select' a bounding
   # box to track
-  if key == ord('s'):
-    initBB = None
+  if key == ord('s') and initBB is None:
     # select the bounding box of the object we want to track (make
     # sure you press ENTER or SPACE after selecting the ROI)
     initBB = cv2.selectROI('Frame', frame, fromCenter=False,
