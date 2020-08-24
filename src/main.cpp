@@ -5,11 +5,11 @@
 Servo tilt; // Ver
 Servo pan;  // Hor
 
-const int DELAY_MILIS = 10;
-const double TILT_Kp{0.05}, TILT_Ki{0.05}, TILT_Kd{0};
+const int DELAY_MILIS = 1;
+const double TILT_Kp{0.2}, TILT_Ki{0.2}, TILT_Kd{0.05};
 PID TILT_PID = PID(TILT_Kp, TILT_Ki, TILT_Kd, 0);
 
-const double PAN_Kp{0.05}, PAN_Ki{0.05}, PAN_Kd{0};
+const double PAN_Kp{0.2}, PAN_Ki{0.2}, PAN_Kd{0.05};
 PID PAN_PID = PID(PAN_Kp, PAN_Ki, PAN_Kd, 0);
 
 void setPropotionalDeg(const int &, const int &);

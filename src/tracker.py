@@ -100,6 +100,7 @@ initBB = None
 isInited = False
 isCommanded = False
 finished = False
+isUpdated = False
 
 # initialize the FPS throughput estimator
 fps = None
@@ -126,16 +127,15 @@ def commander():
   firstTimeFlag = True
   zeroCommandFlag = False
   startTime = None
-  lastTime = epochTime()
   while not globals()['finished']:
-    if not isInited or tiltErr is None or panErr is None:
+    if not globals()['isUpdated'] or not isInited or tiltErr is None or panErr is None:
       continue
     serialInput = None
     if not firstTimeFlag:
       with lock:
         serialInput = ser.read_all()
     if serialInput:
-      serialInput = serialInput.decode('ascii')
+      serialInput = serialInput.decode('utf-8')
       logging.info('SERIAL INPUT %s', serialInput)
     elif firstTimeFlag:
       serialInput = '#'
@@ -148,7 +148,7 @@ def commander():
     if serialInput and serialInput.find('#') != -1:
       serialOutput = f'{int(tiltErr) * -1} {int(panErr) * -1}$'
       with lock:
-        ser.write(serialOutput.encode('ascii'))
+        ser.write(serialOutput.encode('utf-8'))
       logging.info('SERIAL OUTPUT %s', serialOutput)
       globals()['isCommanded'] = True
       cps.update()
@@ -157,6 +157,7 @@ def commander():
       panErrList.append(panErr)
       tiltErrList.append(tiltErr)
       timeList.append(currentTime)
+      globals()['isUpdated'] = False
 
   with lock:
     ser.close()
@@ -200,6 +201,7 @@ while not finished:
     else:
       globals()['panErr'] = 0
       globals()['tiltErr'] = 0
+    globals()['isUpdated'] = True
 
     # update the FPS counter
     fps.update()
