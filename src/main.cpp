@@ -1,54 +1,40 @@
 #include <Arduino.h>
 #include <Servo.h>
-// #include <LiquidCrystal_I2C.h> // Library for LCD
-// #include <Wire.h> // Library for I2C communication
-
-// LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x3F, 16, 2); // Change to (0x27,16,2) for 16x2 LCD.
+#include "pid.h"
 
 Servo tilt; // Ver
 Servo pan;  // Hor
 
-String input;
+const int DELAY_MILIS = 10;
+const double TILT_Kp{0.05}, TILT_Ki{0.05}, TILT_Kd{0};
+PID TILT_PID = PID(TILT_Kp, TILT_Ki, TILT_Kd, 0);
 
-int SAMPLETIME = 10;
-const float H_GAIN{0.1}, W_GAIN{0.1};
+const double PAN_Kp{0.05}, PAN_Ki{0.05}, PAN_Kd{0};
+PID PAN_PID = PID(PAN_Kp, PAN_Ki, PAN_Kd, 0);
 
-int tiltDeg{}, panDeg{};
-
-void setPropotionalDeg();
+void setPropotionalDeg(const int &, const int &);
 
 void setup()
 {
-  // Wire.begin(12, 13);
-  // lcd.begin();
-
-  // lcd.home();
-  // lcd.print("LCD initialized");
-
-  tilt.write(30);
-  tilt.attach(5);
+  tilt.write(20);
+  tilt.attach(4);
 
   pan.write(90);
-  pan.attach(4);
+  pan.attach(16);
 
   Serial.begin(115200);
   Serial.print("Serial initialized.");
 }
 
+String input;
+int tiltErr{}, panErr{};
+int tiltOutput{}, panOutput{};
+String tiltIn{}, panIn{};
 void loop()
 {
   if (Serial.available())
   {
-    // input = "";
-    // while (Serial.available())
-    // {
-    //   char ch = Serial.read();
-    //   input += String(ch);
-    // }
-
     input = Serial.readStringUntil('$');
-
-    String tiltIn{}, panIn{};
     for (size_t i = 0; i < input.length(); i++)
     {
       if (input.charAt(i) == ' ')
@@ -57,35 +43,35 @@ void loop()
         panIn = input.substring(i + 1, input.length());
       }
     }
-    tiltDeg = tiltIn.toInt();
-    panDeg = panIn.toInt();
+    tiltErr = tiltIn.toInt();
+    panErr = panIn.toInt();
 
-    setPropotionalDeg();
+    tiltOutput = TILT_PID.compute(tiltErr);
+    panOutput = PAN_PID.compute(panErr);
+
+    setPropotionalDeg(tiltOutput, panOutput);
     Serial.write("#");
   }
 }
 
-void setPropotionalDeg()
+void setPropotionalDeg(const int &tiltOutput, const int &panOutput)
 {
-  int tiltDegAbs{abs(tiltDeg)}, panDegAbs{abs(panDeg)};
+  const int tiltAbs{abs(tiltOutput)}, panAbs{abs(panOutput)};
 
-  tiltDegAbs = tiltDegAbs > (1.0 / H_GAIN) ? (tiltDegAbs * H_GAIN) : 8;
-  panDegAbs = panDegAbs > (1.0 / W_GAIN) ? (panDegAbs * W_GAIN) : 7;
-
-  int maximum{max(tiltDegAbs, panDegAbs)};
-  int panSign{panDeg == 0 ? 0 : panDeg / panDegAbs},
-      tiltSign{tiltDeg == 0 ? 0 : tiltDeg / tiltDegAbs};
-  int tiltCurr{tilt.read()}, panCurr{pan.read()};
+  const int maximum{max(tiltAbs, panAbs)};
+  const int panSign{panOutput == 0 ? 0 : panOutput / panAbs},
+      tiltSign{tiltOutput == 0 ? 0 : tiltOutput / tiltAbs};
+  const int tiltCurr{tilt.read()}, panCurr{pan.read()};
   for (int i = 0; i < maximum; i++)
   {
-    if (tiltSign != 0 && i < tiltDegAbs)
+    if (tiltSign != 0 && i < tiltAbs)
     {
-      int pos{tiltCurr + tiltSign * i};
+      const int pos{tiltCurr + tiltSign * i};
       if (pos >= 3 && pos <= 120)
         tilt.write(pos);
     }
-    if (panSign != 0 && i < panDegAbs)
+    if (panSign != 0 && i < panAbs)
       pan.write(panCurr + panSign * i);
-    delay(SAMPLETIME);
+    delay(DELAY_MILIS);
   }
 }

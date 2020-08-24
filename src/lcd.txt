@@ -1,0 +1,11 @@
+// #include <LiquidCrystal_I2C.h> // Library for LCD
+// #include <Wire.h> // Library for I2C communication
+
+// LiquidCrystal_I2C lcd = LiquidCrystal_I2C(0x3F, 16, 2); // Change to (0x27,16,2) for 16x2 LCD.
+
+Setup:
+  // Wire.begin(12, 13);
+  // lcd.begin();
+
+  // lcd.home();
+  // lcd.print("LCD initialized");
