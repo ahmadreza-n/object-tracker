@@ -10,6 +10,7 @@ double PID::compute(const double &err)
 {
   const long int currentTime =  millis();
   double Ts = lastTime == 0 ? 0 : (currentTime - lastTime) / 1000.0;
+  if (Ts > 1) Ts = 1;
   // Serial.println(Ts);
   lastTime = currentTime;
   const double derivative = _Ts == 0 ? 0 : (err - lastErr) / Ts;
