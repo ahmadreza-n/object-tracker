@@ -2,7 +2,7 @@
 #include "pid.h"
 
 PID::PID(const double &Kp, const double &Ki, const double &Kd, const double &Ts)
-    : _Kp{Kp}, _Ki{Ki}, _Kd{Kd}, _Ts{Ts}, lastErr{0}, lastTime{0}
+    : _Kp{Kp}, _Ki{Ki}, _Kd{Kd}, _Ts{Ts}, lastErr{0}, lastTime{0}, maxIntegral{Ki == 0 ? 0 : 180/Ki}
 {
 }
 
@@ -15,13 +15,13 @@ double PID::compute(const double &err)
   const double derivative = _Ts == 0 ? 0 : (err - lastErr) / Ts;
   integral += err * Ts;
 
-  if (integral > 65535)
+  if (integral > maxIntegral)
   {
-    integral = 65535;
+    integral = maxIntegral;
   }
-  else if (integral < -65535)
+  else if (integral < -maxIntegral)
   {
-    integral = -65535;
+    integral = -maxIntegral;
   }
   if (integral * err < 0)
   {

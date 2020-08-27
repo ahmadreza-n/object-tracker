@@ -64,7 +64,7 @@ except KeyError as err:
 mode = args['mode']
 if mode == 'commander':
   try:
-    ser = serial.Serial('/dev/ttyUSB1', timeout=2000)
+    ser = serial.Serial('/dev/ttyUSB0', timeout=2000)
   except BaseException as err:
     logging.error('Serial initialization failed. %s', err)
     sys.exit()

@@ -15,6 +15,7 @@ private:
   double _Ts;
   double lastErr;
   unsigned long lastTime;
+  double maxIntegral;
   double integral;
 };
 
