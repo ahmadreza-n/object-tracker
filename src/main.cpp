@@ -6,13 +6,13 @@ Servo tilt; // Ver
 Servo pan;  // Hor
 
 const int DELAY_MILIS = 1;
-const double TILT_Kp{0.2}, TILT_Ki{0.2}, TILT_Kd{0.05};
+const double TILT_Kp{0.4}, TILT_Ki{0.2}, TILT_Kd{0.2};
 PID TILT_PID = PID(TILT_Kp, TILT_Ki, TILT_Kd, 0);
 
-const double PAN_Kp{0.2}, PAN_Ki{0.2}, PAN_Kd{0.05};
+const double PAN_Kp{0.4}, PAN_Ki{0.2}, PAN_Kd{0.05};
 PID PAN_PID = PID(PAN_Kp, PAN_Ki, PAN_Kd, 0);
 
-void setPropotionalDeg(const int &, const int &);
+void setDegree(const int &, const int &);
 
 void setup()
 {
@@ -27,7 +27,7 @@ void setup()
 }
 
 String input;
-int tiltErr{}, panErr{};
+double tiltErr{}, panErr{};
 int tiltOutput{}, panOutput{};
 String tiltIn{}, panIn{};
 void loop()
@@ -43,18 +43,18 @@ void loop()
         panIn = input.substring(i + 1, input.length());
       }
     }
-    tiltErr = tiltIn.toInt();
-    panErr = panIn.toInt();
+    tiltErr = tiltIn.toDouble();
+    panErr = panIn.toDouble();
 
     tiltOutput = TILT_PID.compute(tiltErr);
     panOutput = PAN_PID.compute(panErr);
 
-    setPropotionalDeg(tiltOutput, panOutput);
-    Serial.write("#");
+    setDegree(tiltOutput, panOutput);
+    Serial.print(String(tiltOutput) + " " + String(panOutput) + " #");
   }
 }
 
-void setPropotionalDeg(const int &tiltOutput, const int &panOutput)
+void setDegree(const int &tiltOutput, const int &panOutput)
 {
   const int tiltAbs{abs(tiltOutput)}, panAbs{abs(panOutput)};
 

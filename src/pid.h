@@ -7,7 +7,7 @@ class PID
 {
 public:
   PID(const double &, const double &, const double &, const double & Ts=0);
-  double compute(const double &);
+  int compute(const double &);
   ~PID() = default;
 
 private:
