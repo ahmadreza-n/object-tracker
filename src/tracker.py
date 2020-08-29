@@ -58,13 +58,13 @@ class Tracker(threading.Thread):
 
       if frame is None:
         if self.shoudlCommand:
-          self.outQ.put({'tiltErr': 0, 'panErr': 0, 'finished': True})
+          self.outQ.put(None)
         break
 
       if initBB is not None:
         success, (tiltErr, panErr) = self.track(frame)
         if self.shoudlCommand:
-          self.outQ.put({'tiltErr': tiltErr, 'panErr': panErr, 'finished': False})
+          self.outQ.put({'tiltErr': tiltErr, 'panErr': panErr})
         self.fps.update()
         self.fps.stop()
 
@@ -92,7 +92,7 @@ class Tracker(threading.Thread):
         if self.shoudlCommand:
           if not self.startEvent.isSet():
             self.startEvent.set()
-          self.outQ.put({'tiltErr': 0, 'panErr': 0, 'finished': True})
+          self.outQ.put(None)
         break
 
     cv2.destroyAllWindows()

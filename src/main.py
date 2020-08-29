@@ -9,8 +9,8 @@ import threading
 import logging
 from time import sleep
 from queue import LifoQueue
-from imutils.video import VideoStream
 import matplotlib.pyplot as plt
+from imutils.video import VideoStream
 from tracker import TRACKER_CHOISES, Tracker
 from commander import commander
 #endregion
@@ -65,23 +65,49 @@ if not SKIP_COMMAND:
     raise err
 
 
+plt.figure(1)
+plt.subplot(2, 1, 1)
+plt.subplot(2, 1, 2)
+timeList = []
+panErrList = []
+panOutputList = []
+tiltErrList = []
+tiltOutputList = []
+plt.ion()
+plt.show()
+print('here')
+
+while True:
+  plt.pause(0.001)
+  data = pltQ.get()
+  if data is None:
+    break
+  time, panErr, tiltErr, panOutput, tiltOutput = [
+    data[key] for key in ('time', 'panErr', 'tiltErr', 'panOutput', 'tiltOutput')]
+  timeList.append(time)
+  panErrList.append(panErr)
+  panOutputList.append(panOutput)
+  tiltErrList.append(tiltErr)
+  tiltOutputList.append(tiltOutput)
+
+  plt.subplot(2, 1, 1)
+  plt.plot(timeList, panErrList, label='Pan Error', color='r')
+  plt.plot(timeList, panOutputList, label='Pan Output', color='g')
+
+  if len(timeList) == 1:
+    plt.legend()
+
+  plt.subplot(2, 1, 2)
+  plt.plot(timeList, tiltErrList, label='Tilt Error', color='r')
+  plt.plot(timeList, tiltOutputList, label='Tilt Output', color='g')
+  if len(timeList) == 1:
+    plt.legend()
+
+  plt.draw()
+plt.ioff()
+plt.show()
+
 trackerThread.join()
 
 if not SKIP_COMMAND:
   commandThread.join()
-  data = pltQ.get()
-  timeList, panErrList, tiltErrList, panOutputList, tiltOutputList = [data[key]
-                                      for key in ('timeList', 'panErrList',
-                                                  'tiltErrList', 'panOutputList', 'tiltOutputList')]
-
-  fig, axs = plt.subplots(2)
-  fig.suptitle('Error and Controller Outputs')
-  axs[0].plot(timeList, panErrList, label='Pan Error')
-  axs[0].plot(timeList, panOutputList, label='Pan Output')
-  axs[0].legend()
-
-  axs[1].plot(timeList, tiltErrList, label='Tilt Error')
-  axs[1].plot(timeList, tiltOutputList, label='Tilt Output')
-  axs[1].legend()
-
-  plt.show()

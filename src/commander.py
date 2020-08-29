@@ -12,11 +12,6 @@ SERIAL_ADDRESS = '/dev/ttyUSB0'
 SERIAL_BAUDRATE = 115200
 
 def commander(inQ: LifoQueue, pltQ: LifoQueue, startEvent: threading.Event):
-  tiltErrList = []
-  tiltOutputList = []
-  panErrList = []
-  panOutputList = []
-  timeList = []
   firstTimeFlag = True
   startTime = None
   lastTime = None
@@ -28,8 +23,11 @@ def commander(inQ: LifoQueue, pltQ: LifoQueue, startEvent: threading.Event):
   serialHandler.baudrate = SERIAL_BAUDRATE
   logger.info('COMMANDER_THREAD started')
   cps = FPS()
+  # pylint: disable=protected-access 
+  cps.getFPS = lambda: 0 if cps._numFrames == 0 else cps.fps
   startEvent.wait()
   cps.start()
+  pltData = {}
   while True:
     if firstTimeFlag:
       firstTimeFlag = False
@@ -39,8 +37,9 @@ def commander(inQ: LifoQueue, pltQ: LifoQueue, startEvent: threading.Event):
         serialInput = serialHandler.read_until('#'.encode('utf-8')).decode('utf-8')
         logger.info('SERIAL INPUT %s', serialInput)
         tiltOutput, panOutput, _ = serialInput.split(' ')
-        tiltOutputList.append(int(tiltOutput))
-        panOutputList.append(int(panOutput))
+        pltData['tiltOutput'] = int(tiltOutput)
+        pltData['panOutput'] = int(panOutput)
+        pltQ.put(pltData)
         diff = epochTime() - lastTime
         if diff < 0.1:
           sleep(0.1 - diff)
@@ -50,21 +49,20 @@ def commander(inQ: LifoQueue, pltQ: LifoQueue, startEvent: threading.Event):
 
     lastTime = epochTime()
     data = inQ.get()
-    tiltErr, panErr, finished = [data[key] for key in ('tiltErr', 'panErr', 'finished')]
-    if finished:
+    if data is None:
       break
+    tiltErr, panErr = [data[key] for key in ('tiltErr', 'panErr')]
 
     serialOutput = f'{tiltErr * -1:.2f} {panErr * -1:.2f}$'
     serialHandler.write(serialOutput.encode('utf-8'))
     logger.info('SERIAL OUTPUT %s', serialOutput)
     cps.update()
     cps.stop()
-    panErrList.append(panErr)
-    tiltErrList.append(tiltErr)
-    timeList.append(epochTime() - startTime)
+    pltData['time'] = float(epochTime() - startTime)
+    pltData['panErr'] = float(panErr)
+    pltData['tiltErr'] = float(tiltErr)
 
   serialHandler.close()
-  logger.info('CPS: %s', cps.fps() if len(timeList) != 0 else 0)
-  pltQ.put({'timeList': timeList, 'panErrList': panErrList, 'tiltErrList': tiltErrList,
-            'tiltOutputList': tiltOutputList, 'panOutputList': panOutputList})
+  pltQ.put(None)
+  logger.info('CPS: %s', cps.getFPS())
   logger.info('COMMANDER_THREAD finished')
