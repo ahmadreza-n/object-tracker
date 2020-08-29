@@ -1,5 +1,5 @@
 import logging
-from queue import LifoQueue
+from queue import LifoQueue, Queue
 import threading
 from time import sleep, time as epochTime
 from imutils.video import FPS
@@ -11,7 +11,7 @@ SERIAL_TIMEOUT = 2000
 SERIAL_ADDRESS = '/dev/ttyUSB0'
 SERIAL_BAUDRATE = 115200
 
-def commander(inQ: LifoQueue, pltQ: LifoQueue, startEvent: threading.Event):
+def commander(inQ: LifoQueue, pltQ: Queue, startEvent: threading.Event):
   firstTimeFlag = True
   startTime = None
   lastTime = None
@@ -24,7 +24,7 @@ def commander(inQ: LifoQueue, pltQ: LifoQueue, startEvent: threading.Event):
   logger.info('COMMANDER_THREAD started')
   cps = FPS()
   # pylint: disable=protected-access 
-  cps.getFPS = lambda: 0 if cps._numFrames == 0 else cps.fps
+  cps.getFPS = lambda: (0 if cps._numFrames == 0 else cps.fps())
   startEvent.wait()
   cps.start()
   pltData = {}

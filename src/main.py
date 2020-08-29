@@ -8,7 +8,7 @@ import argparse
 import threading
 import logging
 from time import sleep
-from queue import LifoQueue
+from queue import LifoQueue, Queue
 import matplotlib.pyplot as plt
 from imutils.video import VideoStream
 from tracker import TRACKER_CHOISES, Tracker
@@ -44,12 +44,14 @@ except Exception as err:
 #endregion
 
 q = LifoQueue()
-pltQ = LifoQueue()
+pltQ = Queue()
 startEvent = threading.Event()
+
 
 try:
   trackerThread = Tracker(videoStream=vs, trackerType=TRACKER_TYPE,
-                          outQ=q, skipCommand=SKIP_COMMAND, startEvent=startEvent)
+                          outQ=q, skipCommand=SKIP_COMMAND,
+                          startEvent=startEvent)
   trackerThread.start()
 except Exception as err:
   logger.error('Tracker thread err.')
@@ -65,17 +67,13 @@ if not SKIP_COMMAND:
     raise err
 
 
-plt.figure(1)
-plt.subplot(2, 1, 1)
-plt.subplot(2, 1, 2)
+fig, a = plt.subplots(2)
 timeList = []
 panErrList = []
 panOutputList = []
 tiltErrList = []
 tiltOutputList = []
 plt.ion()
-plt.show()
-print('here')
 
 while True:
   plt.pause(0.001)
@@ -90,22 +88,18 @@ while True:
   tiltErrList.append(tiltErr)
   tiltOutputList.append(tiltOutput)
 
-  plt.subplot(2, 1, 1)
-  plt.plot(timeList, panErrList, label='Pan Error', color='r')
-  plt.plot(timeList, panOutputList, label='Pan Output', color='g')
+  a[0].plot(timeList, panErrList, label='Pan Error', color='r')
+  a[0].plot(timeList, panOutputList, label='Pan Output', color='g')
 
   if len(timeList) == 1:
-    plt.legend()
+    a[0].legend()
 
-  plt.subplot(2, 1, 2)
-  plt.plot(timeList, tiltErrList, label='Tilt Error', color='r')
-  plt.plot(timeList, tiltOutputList, label='Tilt Output', color='g')
+  a[1].plot(timeList, tiltErrList, label='Tilt Error', color='r')
+  a[1].plot(timeList, tiltOutputList, label='Tilt Output', color='g')
   if len(timeList) == 1:
-    plt.legend()
+    a[1].legend()
 
   plt.draw()
-plt.ioff()
-plt.show()
 
 trackerThread.join()
 
