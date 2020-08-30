@@ -139,10 +139,8 @@ disable=print-statement,
         deprecated-sys-function,
         exception-escape,
         comprehension-escape,
-        invalid-name,
         missing-module-docstring,
         broad-except,
-        bad-continuation,
         missing-function-docstring,
         missing-class-docstring,
 
@@ -307,7 +305,7 @@ expected-line-ending-format=
 ignore-long-lines=^\s*(# )?<?https?://\S+>?$
 
 # Number of spaces of indent required inside a hanging or continued line.
-indent-after-paren=4
+indent-after-paren=2
 
 # String used as indentation unit. This is usually "    " (4 spaces) or "\t" (1
 # tab).
@@ -338,14 +336,14 @@ single-line-if-stmt=no
 [BASIC]
 
 # Naming style matching correct argument names.
-argument-naming-style=snake_case
+argument-naming-style=camelCase
 
 # Regular expression matching correct argument names. Overrides argument-
 # naming-style.
 #argument-rgx=
 
 # Naming style matching correct attribute names.
-attr-naming-style=snake_case
+attr-naming-style=camelCase
 
 # Regular expression matching correct attribute names. Overrides attr-naming-
 # style.
@@ -385,7 +383,7 @@ const-naming-style=UPPER_CASE
 docstring-min-length=-1
 
 # Naming style matching correct function names.
-function-naming-style=snake_case
+function-naming-style=camelCase
 
 # Regular expression matching correct function names. Overrides function-
 # naming-style.
@@ -410,7 +408,7 @@ inlinevar-naming-style=any
 #inlinevar-rgx=
 
 # Naming style matching correct method names.
-method-naming-style=snake_case
+method-naming-style=camelCase
 
 # Regular expression matching correct method names. Overrides method-naming-
 # style.
@@ -437,7 +435,7 @@ no-docstring-rgx=^_
 property-classes=abc.abstractproperty
 
 # Naming style matching correct variable names.
-variable-naming-style=snake_case
+variable-naming-style=camelCase
 
 # Regular expression matching correct variable names. Overrides variable-
 # naming-style.
