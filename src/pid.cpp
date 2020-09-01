@@ -15,7 +15,6 @@ int PID::compute(const double &err)
     Ts = 0;
     integral = 0;
   }
-  // Serial.println(Ts);
   lastTime = currentTime;
   const double derivative = _Ts == 0 ? 0 : (err - lastErr) / Ts;
   integral += err * Ts;
@@ -28,11 +27,18 @@ int PID::compute(const double &err)
   {
     integral = -maxIntegral;
   }
-  // if (integral * err < 0)
-  // {
-  //   integral = 0;
-  // }
+  if (integral * err < 0)
+  {
+    integral = 0;
+  }
 
   lastErr = err;
   return (err * _Kp) + (derivative * _Kd) + (integral * _Ki);
+}
+
+void PID::reset()
+{
+  lastErr = 0;
+  lastTime = 0;
+  integral = 0;
 }

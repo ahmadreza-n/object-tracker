@@ -2,8 +2,14 @@
 #include <Servo.h>
 #include "pid.h"
 
-Servo tilt; // Ver
-Servo pan;  // Hor
+Servo TILT; // Ver
+Servo PAN;  // Hor
+
+#define TILT_PIN D4
+#define PAN_PIN D2
+
+const int TILT_INIT_VALUE = 20;
+const int PAN_INIT_VALUE = 90;
 
 const int DELAY_MILIS = 1;
 const double TILT_Kp{0.4}, TILT_Ki{0.2}, TILT_Kd{0.2};
@@ -13,14 +19,15 @@ const double PAN_Kp{0.4}, PAN_Ki{0.2}, PAN_Kd{0.05};
 PID PAN_PID = PID(PAN_Kp, PAN_Ki, PAN_Kd, 0);
 
 void setDegree(const int &, const int &);
+void reset();
 
 void setup()
 {
-  tilt.write(20);
-  tilt.attach(4);
+  TILT.write(TILT_INIT_VALUE);
+  TILT.attach(TILT_PIN);
 
-  pan.write(90);
-  pan.attach(16);
+  PAN.write(PAN_INIT_VALUE);
+  PAN.attach(PAN_PIN);
 
   Serial.begin(115200);
   Serial.print("Serial initialized.");
@@ -35,6 +42,10 @@ void loop()
   if (Serial.available())
   {
     input = Serial.readStringUntil('$');
+    if (input == "@") {
+      reset();
+      return;
+    }
     for (size_t i = 0; i < input.length(); i++)
     {
       if (input.charAt(i) == ' ')
@@ -61,17 +72,25 @@ void setDegree(const int &tiltOutput, const int &panOutput)
   const int maximum{max(tiltAbs, panAbs)};
   const int panSign{panOutput == 0 ? 0 : panOutput / panAbs},
       tiltSign{tiltOutput == 0 ? 0 : tiltOutput / tiltAbs};
-  const int tiltCurr{tilt.read()}, panCurr{pan.read()};
+  const int tiltCurr{TILT.read()}, panCurr{PAN.read()};
   for (int i = 0; i < maximum; i++)
   {
     if (tiltSign != 0 && i < tiltAbs)
     {
       const int pos{tiltCurr + tiltSign * i};
       if (pos >= 3 && pos <= 120)
-        tilt.write(pos);
+        TILT.write(pos);
     }
     if (panSign != 0 && i < panAbs)
-      pan.write(panCurr + panSign * i);
+      PAN.write(panCurr + panSign * i);
     delay(DELAY_MILIS);
   }
+}
+
+void reset() {
+  TILT.write(TILT_INIT_VALUE);
+  TILT_PID.reset();
+  PAN.write(PAN_INIT_VALUE);
+  PAN_PID.reset();
+  Serial.print("@#");
 }
