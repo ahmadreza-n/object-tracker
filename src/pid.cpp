@@ -35,10 +35,3 @@ int PID::compute(const double &err)
   lastErr = err;
   return (err * _Kp) + (derivative * _Kd) + (integral * _Ki);
 }
-
-void PID::reset()
-{
-  lastErr = 0;
-  lastTime = 0;
-  integral = 0;
-}

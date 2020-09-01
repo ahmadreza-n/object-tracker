@@ -8,7 +8,6 @@ class PID
 public:
   PID(const double &, const double &, const double &, const double & Ts=0);
   int compute(const double &);
-  void reset();
   ~PID() = default;
 
 private:

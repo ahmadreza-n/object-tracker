@@ -43,7 +43,6 @@ void loop()
   {
     input = Serial.readStringUntil('$');
     if (input == "@") {
-      reset();
       return;
     }
     for (size_t i = 0; i < input.length(); i++)
@@ -85,12 +84,4 @@ void setDegree(const int &tiltOutput, const int &panOutput)
       PAN.write(panCurr + panSign * i);
     delay(DELAY_MILIS);
   }
-}
-
-void reset() {
-  TILT.write(TILT_INIT_VALUE);
-  TILT_PID.reset();
-  PAN.write(PAN_INIT_VALUE);
-  PAN_PID.reset();
-  Serial.print("@#");
 }
