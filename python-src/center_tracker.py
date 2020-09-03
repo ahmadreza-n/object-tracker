@@ -1,14 +1,19 @@
 from collections import OrderedDict
+import cv2
 from scipy.spatial import distance as dist
+
+CAM_W = 640
+CAM_H = 480
 
 class CenterTracker():
   '''
   Assign's unique ID to each detected object
   '''
-  def __init__(self, maxDisappeared=50):
+  def __init__(self, prototxt: str, model: str, confidence: float, maxDisappeared=50):
     self.nextObjectID = 0
     self.objects = OrderedDict()
-
+    self.net = cv2.dnn.readNetFromCaffe(prototxt, model)  # pylint: disable=no-member
+    self.confidence = confidence
     self.maxDisappeared = maxDisappeared
 
   @staticmethod
@@ -47,7 +52,23 @@ class CenterTracker():
 
     return dist.cdist(objectCenters, inputCenters)
 
-  def update(self, rects: list):
+  def getRects(self, frame):
+    rects = []
+
+    blob = cv2.dnn.blobFromImage(frame, 1.0, (CAM_W, CAM_H), (104.0, 177.0, 123.0))  # pylint: disable=no-member
+    self.net.setInput(blob)
+
+    detections = self.net.forward()[0, 0]
+    detections = filter(lambda x: x[2] > self.confidence, detections)
+    for obj in list(detections):
+      box = obj[3:7] * [CAM_W, CAM_H, CAM_W, CAM_H]
+      rects.append(tuple(box.astype('int')))
+
+    return rects
+
+  def update(self, frame):
+    rects = self.getRects(frame)
+
     if len(rects) == 0:
       self.disappearAll()
       return self.objects
