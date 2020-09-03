@@ -48,6 +48,8 @@ class Tracker(threading.Thread):
 
   def initTracker(self, frame):
     initBB = cv2.selectROI('Frame', frame, fromCenter=False, showCrosshair=True)
+    if initBB == (0, 0, 0, 0):
+      return None
     self.objectTracker.init(frame, initBB)
     self.fps.start()
     if self.shoudCommand:

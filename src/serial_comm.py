@@ -29,8 +29,7 @@ class SerialComm(threading.Thread):
     logger.info('COMMANDER_THREAD started')
     pltData = {}
     cps = FPS()
-    # pylint: disable=protected-access
-    cps.getFPS = lambda: (0 if cps._numFrames == 0 else cps.fps())
+    cps.getFPS = lambda: (0 if cps._numFrames == 0 else cps.fps())  # pylint: disable=protected-access
     startTime = epochTime()
     cps.start()
     while True:
