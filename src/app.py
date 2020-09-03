@@ -7,7 +7,7 @@ python opencv_object_tracking.py --tracker csrt
 import argparse
 import logging
 from queue import Queue
-from tracker import TRACKER_CHOISES, Tracker
+from object_tracker import TRACKER_CHOISES, ObjectTracker
 from plotter import plotter
 #endregion
 
@@ -19,20 +19,19 @@ ap = argparse.ArgumentParser()
 ap.add_argument('-t', '--tracker', type=str, default='csrt',
                 choices=TRACKER_CHOISES,
                 help='OpenCV object tracker type')
-ap.add_argument('--skip-command', type=bool, default=False,
-                help='Pass true to skip commanding the motors')
+ap.add_argument('--skip-serial', type=bool, default=False,
+                help='Pass true to skip serial communication')
 ARGS = vars(ap.parse_args())
-SKIP_COMMAND = ARGS['skip_command']
+SKIP_SERIAL = ARGS['skip_serial']
 TRACKER_TYPE = ARGS['tracker']
-
 #endregion
 
 pltQ = Queue()
 
-trackerThread = Tracker(pltQ, TRACKER_TYPE, not SKIP_COMMAND, name='tracker', daemon=True)
+trackerThread = ObjectTracker(pltQ, TRACKER_TYPE, not SKIP_SERIAL, name='tracker', daemon=True)
 trackerThread.start()
 
-if not SKIP_COMMAND:
+if not SKIP_SERIAL:
   plotter(pltQ)
 
 trackerThread.join()

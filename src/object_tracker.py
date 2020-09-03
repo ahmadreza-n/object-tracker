@@ -25,7 +25,7 @@ TRACKER_CHOISES = OPENCV_OBJECT_TRACKERS.keys()
 
 logger = logging.getLogger()
 
-class Tracker(threading.Thread):
+class ObjectTracker(threading.Thread):
   def __init__(self, pltQ: Queue,
                trackerType: str, shoudCommand: bool, *args, **kwargs):
     threading.Thread.__init__(self, **kwargs)
@@ -56,7 +56,7 @@ class Tracker(threading.Thread):
       try:
         self.serialThread.start()
       except Exception as err:
-        logger.error('Tracker thread err.')
+        logger.error('ObjectTracker thread err.')
         raise err
     return initBB
 
@@ -76,7 +76,7 @@ class Tracker(threading.Thread):
       ('Success' if success else 'Failure', (0, 255, 0) if success else (0, 0, 255)),
       (f'Tilt Error {tiltErr:.2f}' if success else '', (0, 0, 255)),
       (f'Pan Error {panErr:.2f}' if success else '', (0, 0, 255)),
-      (f'Tracker {self.trackerType}', (0, 0, 0)),
+      (f'ObjectTracker {self.trackerType}', (0, 0, 0)),
       (f'FPS {self.fps.getFPS():.2f}', (0, 0, 255)),
     ]
 
