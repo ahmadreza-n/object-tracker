@@ -11,10 +11,10 @@ Servo PAN;  // Hor
 const int TILT_INIT_VALUE = 20;
 const int PAN_INIT_VALUE = 90;
 
-const double TILT_Kp{0.32}, TILT_Ki{0.38}, TILT_Kd{0};
+const double TILT_Kp{0.32}, TILT_Ki{0.19}, TILT_Kd{0};
 PID TILT_PID = PID(TILT_Kp, TILT_Ki, TILT_Kd, 0);
 
-const double PAN_Kp{0.41}, PAN_Ki{0.49}, PAN_Kd{0};
+const double PAN_Kp{0.41}, PAN_Ki{0.24}, PAN_Kd{0};
 PID PAN_PID = PID(PAN_Kp, PAN_Ki, PAN_Kd, 0);
 
 void setDegree(const int &, const int &);

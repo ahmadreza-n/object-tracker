@@ -8,7 +8,7 @@ PID::PID(const double &Kp, const double &Ki, const double &Kd, const double &Ts)
 
 int PID::compute(const double &err)
 {
-  const long int currentTime = millis();
+  const long currentTime = millis();
   double Ts = lastTime == 0 ? 0 : (currentTime - lastTime) / 1000.0;
   if (Ts > 0.5)
   {
