@@ -31,11 +31,11 @@ def plotter(pltQ: Queue):
         axs[1].legend()
 
       fig.canvas.draw()
-    if len(timeList) != 0:
-      plt.show()
-    else:
+    if len (timeList) ==0:
       plt.close()
-  timer = fig.canvas.new_timer(interval=1000)
+    else:
+      plt.show()
+  timer = fig.canvas.new_timer(interval=10)
   timer.add_callback(callBack)
   timer.start()
 

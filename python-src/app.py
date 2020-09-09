@@ -29,10 +29,13 @@ ap.add_argument('-p', '--prototxt', type=str, default='./python-src/deploy.proto
                 help='path to Caffe \'deploy\' prototxt file')
 ap.add_argument('--skip-serial', type=bool, default=False,
                 help='Pass true to skip serial communication')
+ap.add_argument('--skip-plot', type=bool, default=True, nargs='?',
+                help='Pass False to skip plotting.')
 ap.add_argument('-c', '--confidence', type=float, default=0.8,
                 help='minimum probability to filter weak detections')
 ARGS = vars(ap.parse_args())
-SKIP_SERIAL = ARGS['skip_serial']
+SKIP_SERIAL = ARGS['skip_serial'] is None
+SKIP_PLOT = ARGS['skip_plot'] is None
 #endregion
 
 pltQ = Queue()
@@ -54,7 +57,7 @@ trackerThread = ObjectTracker(ARGS['tracker'],
                               daemon=True)
 trackerThread.start()
 
-if not SKIP_SERIAL:
+if not SKIP_SERIAL and not SKIP_PLOT:
   plotter(pltQ)
 
 trackerThread.join()

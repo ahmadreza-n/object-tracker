@@ -42,22 +42,22 @@ class SerialComm(threading.Thread):
           pltData['panOutput'] = int(panOutput)
           self.outQ.put(pltData)
       except Exception as err:
-        logger.error('input decode failed.')
-        raise err
+        logger.error('serial input failed. %s', err)
+        continue
 
       data = self.inQ.get()
       if data is None:
         break
       tiltErr, panErr = [data[key] for key in ('tiltErr', 'panErr')]
 
-      serialOutput = f'{tiltErr * -1:.2f} {panErr * -1:.2f}$'
+      serialOutput = f'{tiltErr * -1} {panErr * -1}$'
       self.handler.write(serialOutput.encode('utf-8'))
       logger.info('OUTPUT: %s', serialOutput)
       cps.update()
       cps.stop()
       pltData['time'] = float(epochTime() - startTime)
-      pltData['panErr'] = float(panErr)
-      pltData['tiltErr'] = float(tiltErr)
+      pltData['panErr'] = panErr
+      pltData['tiltErr'] = tiltErr
 
     self.outQ.put(None)
 

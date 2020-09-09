@@ -16,22 +16,16 @@ int PID::compute(const double &err)
     integral = 0;
   }
   lastTime = currentTime;
-  const double derivative = _Ts == 0 ? 0 : (err - lastErr) / Ts;
+  const double derivative = Ts == 0 ? 0 : (err - lastErr) / Ts;
   integral += err * Ts;
 
   if (integral > maxIntegral)
-  {
     integral = maxIntegral;
-  }
   else if (integral < -maxIntegral)
-  {
     integral = -maxIntegral;
-  }
-  if (integral * err < 0)
-  {
+  if (integral * err <= 0)
     integral = 0;
-  }
 
   lastErr = err;
-  return (err * _Kp) + (derivative * _Kd) + (integral * _Ki);
+  return round((err * _Kp) + (derivative * _Kd) + (integral * _Ki));
 }

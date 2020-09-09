@@ -11,15 +11,13 @@ Servo PAN;  // Hor
 const int TILT_INIT_VALUE = 20;
 const int PAN_INIT_VALUE = 90;
 
-const int DELAY_MILIS = 1;
-const double TILT_Kp{0.4}, TILT_Ki{0.2}, TILT_Kd{0.2};
+const double TILT_Kp{0.32}, TILT_Ki{0.38}, TILT_Kd{0};
 PID TILT_PID = PID(TILT_Kp, TILT_Ki, TILT_Kd, 0);
 
-const double PAN_Kp{0.4}, PAN_Ki{0.2}, PAN_Kd{0.05};
+const double PAN_Kp{0.41}, PAN_Ki{0.49}, PAN_Kd{0};
 PID PAN_PID = PID(PAN_Kp, PAN_Ki, PAN_Kd, 0);
 
 void setDegree(const int &, const int &);
-void reset();
 
 void setup()
 {
@@ -42,25 +40,33 @@ void loop()
   if (Serial.available())
   {
     input = Serial.readStringUntil('$');
-    if (input == "@") {
-      return;
-    }
-    for (size_t i = 0; i < input.length(); i++)
+
+    if (input == "@")
+      Serial.print("@#");
+    else
     {
-      if (input.charAt(i) == ' ')
+      for (size_t i = 0; i < input.length(); i++)
       {
-        tiltIn = input.substring(0, i);
-        panIn = input.substring(i + 1, input.length());
+        if (input.charAt(i) == ' ')
+        {
+          tiltIn = input.substring(0, i);
+          panIn = input.substring(i + 1, input.length());
+        }
       }
+      tiltErr = tiltIn.toInt();
+      if (abs(tiltErr) <= 2)
+        tiltErr = 0;
+      panErr = panIn.toInt();
+      if (abs(panErr) <= 2)
+        panErr = 0;
+
+      tiltOutput = TILT_PID.compute(tiltErr);
+      panOutput = PAN_PID.compute(panErr);
+
+      setDegree(tiltOutput, panOutput);
+      // delay(Ts * 900);
+      Serial.print(String(tiltOutput) + " " + String(panOutput) + " #");
     }
-    tiltErr = tiltIn.toDouble();
-    panErr = panIn.toDouble();
-
-    tiltOutput = TILT_PID.compute(tiltErr);
-    panOutput = PAN_PID.compute(panErr);
-
-    setDegree(tiltOutput, panOutput);
-    Serial.print(String(tiltOutput) + " " + String(panOutput) + " #");
   }
 }
 
@@ -81,7 +87,10 @@ void setDegree(const int &tiltOutput, const int &panOutput)
         TILT.write(pos);
     }
     if (panSign != 0 && i < panAbs)
-      PAN.write(panCurr + panSign * i);
-    delay(DELAY_MILIS);
+    {
+      const int pos{panCurr + panSign * i};
+      if (pos >= 2 && pos <= 178)
+        PAN.write(pos);
+    }
   }
 }

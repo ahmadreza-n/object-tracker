@@ -78,17 +78,21 @@ class ObjectTracker(threading.Thread):
       (boxX, boxY, boxW, boxH) = [int(v) for v in box]
       cv2.rectangle(frame, (boxX, boxY), (boxX + boxW, boxY + boxH), (0, 255, 0), 2)
       panErr = (boxX + boxW/2 - CAM_W/2)*(CAM_FOV_W/2)/(CAM_W/2)
+      panErr = round(panErr)
       tiltErr = (boxY + boxH/2 - CAM_H/2)*(CAM_FOV_H/2)/(CAM_H/2)
+      tiltErr = round(tiltErr)
       if self.serialThread:
         self.outQ.put({'panErr': panErr, 'tiltErr': tiltErr})
 
     info = [
       ('Success' if success else 'Failure', (0, 255, 0) if success else (0, 0, 255)),
-      (f'Tilt Error {tiltErr:.2f}' if success else '', (0, 0, 255)),
-      (f'Pan Error {panErr:.2f}' if success else '', (0, 0, 255)),
       (f'ObjectTracker {self.trackerType}', (0, 0, 0)),
       (f'FPS {self.fps.getFPS():.2f}', (0, 0, 255)),
     ]
+
+    if success:
+      info.append((f'Tilt Error {tiltErr}', (0, 0, 255)))
+      info.append((f'Pan Error {panErr}', (0, 0, 255)))
 
     for (i, (text, color)) in enumerate(info):
       cv2.putText(frame, text, (10, 20 + (i * 20)),
