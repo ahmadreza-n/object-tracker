@@ -83,28 +83,31 @@ class CenterTracker():
     distances = self.getDistances(rects)
 
     rows = distances.min(axis=1).argsort()
-    cols = distances.argmin(axis=1)[rows]
+    cols = set()
+
+    for row in rows:
+      if len(cols) == len(rects):
+        break
+      indices = distances[row].argsort()
+      i = 0
+      col = indices[i]
+      while col in cols:
+        i += 1
+        col = indices[i]
+      cols.add(col)
 
     usedRows = set()
-    usedCols = set()
 
     for (row, col) in zip(rows, cols):
-      if row in usedRows or col in usedCols:
-        continue
-
       self.updateInfo(objectIDs[row], rects[col])
-
       usedRows.add(row)
-      usedCols.add(col)
 
-    if distances.shape[0] >= distances.shape[1]:
-      unusedRows = set(range(0, distances.shape[0])).difference(usedRows)
-      for row in unusedRows:
-        self.disappear(objectIDs[row])
+    unusedRows = set(range(0, len(self.objects))).difference(usedRows)
+    for row in unusedRows:
+      self.disappear(objectIDs[row])
 
-    else:
-      unusedCols = set(range(0, distances.shape[1])).difference(usedCols)
-      for col in unusedCols:
-        self.register(rects[col])
+    unusedCols = set(range(0, len(rects))).difference(cols)
+    for col in unusedCols:
+      self.register(rects[col])
 
     return self.objects
