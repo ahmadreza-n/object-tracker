@@ -1,5 +1,4 @@
 import threading
-import os
 import logging
 from queue import LifoQueue
 from time import sleep
@@ -38,12 +37,9 @@ class ObjectTracker(threading.Thread):
     threading.Thread.__init__(self, **kwargs)
     try:
       logger.info('starting video stream...')
-      self.camW = os.getenv('CAM_W')
-      self.camH = os.getenv('CAM_H')
-      self.camFrameRate = os.getenv('CAM_FRAMERATE')
       self.videoStream = VideoStream(src=2,
-                                     resolution=(self.camW, self.camH),
-                                     framerate=self.camFrameRate).start()
+                                     resolution=(CAM_W, CAM_H),
+                                     framerate=CAM_FRAMERATE).start()
       sleep(0.1)
       self.serialThread = serialThread
     except Exception as err:
