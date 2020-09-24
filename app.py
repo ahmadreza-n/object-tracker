@@ -7,7 +7,8 @@ python app.py --help
 import os
 import argparse
 import logging
-from queue import Queue, LifoQueue
+from threading import Event
+from queue import Queue
 from time import sleep
 from dotenv import load_dotenv
 from modules.object_tracker import TRACKER_CHOISES, ObjectTracker
@@ -46,7 +47,8 @@ SKIP_PLOT = ARGS['skip_plot'] is None
 #endregion
 
 pltQ = Queue()
-errQ = LifoQueue()
+errQ = Queue()
+readyEvent = Event()
 centerTracker = CenterTracker(ARGS['prototxt'],
                               ARGS['model'],
                               ARGS['confidence'],
@@ -54,11 +56,13 @@ centerTracker = CenterTracker(ARGS['prototxt'],
 
 serialThread = SerialComm(inQ=errQ,
                           outQ=pltQ,
+                          readyEvent=readyEvent,
                           name='SerialCommThread') if not SKIP_SERIAL else None
 
 trackerThread = ObjectTracker(ARGS['tracker'],
                               serialThread,
                               errQ,
+                              readyEvent,
                               centerTracker,
                               name='TrackerThread',
                               daemon=True)

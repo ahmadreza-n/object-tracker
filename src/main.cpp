@@ -8,6 +8,8 @@ Servo PAN;  // Hor
 #define TILT_PIN D4
 #define PAN_PIN D2
 
+const float Ts = 0.1;
+
 const int TILT_INIT_VALUE = 20;
 const int PAN_INIT_VALUE = 90;
 
@@ -64,7 +66,7 @@ void loop()
       panOutput = PAN_PID.compute(panErr);
 
       setDegree(tiltOutput, panOutput);
-      // delay(Ts * 900);
+      delay(Ts * 900);
       Serial.print(String(tiltOutput) + " " + String(panOutput) + " #");
     }
   }

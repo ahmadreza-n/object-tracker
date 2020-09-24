@@ -1,5 +1,5 @@
 import logging
-from queue import LifoQueue, Queue
+from queue import Queue
 import threading
 from time import time as epochTime
 from imutils.video import FPS
@@ -12,7 +12,7 @@ SERIAL_ADDRESS = '/dev/ttyUSB0'
 SERIAL_BAUDRATE = 115200
 
 class SerialComm(threading.Thread):
-  def __init__(self, inQ: LifoQueue, outQ: Queue, *args, **kwargs):
+  def __init__(self, inQ: Queue, outQ: Queue, readyEvent: threading.Event, *args, **kwargs):
     threading.Thread.__init__(self, **kwargs)
     try:
       self.handler = serial.Serial(SERIAL_ADDRESS, timeout=SERIAL_TIMEOUT, baudrate=SERIAL_BAUDRATE)
@@ -24,6 +24,7 @@ class SerialComm(threading.Thread):
       raise err
     self.inQ = inQ
     self.outQ = outQ
+    self.readyEvent = readyEvent
 
   def run(self):
     logger.info('thread started')
@@ -45,6 +46,7 @@ class SerialComm(threading.Thread):
         logger.error('serial input failed. %s', err)
         continue
 
+      self.readyEvent.set()
       data = self.inQ.get()
       if data is None:
         break

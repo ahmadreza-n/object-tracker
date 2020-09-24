@@ -1,6 +1,6 @@
 import threading
 import logging
-from queue import LifoQueue
+from queue import Queue
 from time import sleep
 from imutils.video import FPS, VideoStream
 import cv2
@@ -31,7 +31,8 @@ class ObjectTracker(threading.Thread):
   def __init__(self,
                trackerType: str,
                serialThread: threading.Thread,
-               outQ: LifoQueue,
+               outQ: Queue,
+               readyEvent: threading.Event,
                centerTracker: CenterTracker,
                *args, **kwargs):
     threading.Thread.__init__(self, **kwargs)
@@ -47,6 +48,7 @@ class ObjectTracker(threading.Thread):
       raise err
     self.trackerType = trackerType
     self.outQ = outQ
+    self.readyEvent = readyEvent
     self.centerTracker = centerTracker
     self.objectTracker = OPENCV_OBJECT_TRACKERS[trackerType]()
     self.fps = FPS()
@@ -84,7 +86,9 @@ class ObjectTracker(threading.Thread):
       tiltErr = (boxY + boxH/2 - CAM_H/2)*(CAM_FOV_H/2)/(CAM_H/2)
       tiltErr = round(tiltErr)
       if self.serialThread:
-        self.outQ.put({'panErr': panErr, 'tiltErr': tiltErr})
+        if self.readyEvent.is_set():
+          self.outQ.put({'panErr': panErr, 'tiltErr': tiltErr})
+          self.readyEvent.clear()
 
     info = [
       ('Success' if success else 'Failure', (0, 255, 0) if success else (0, 0, 255)),
