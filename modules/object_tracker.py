@@ -1,16 +1,18 @@
 import threading
 import logging
+import os
 from queue import Queue
 from time import sleep
 from imutils.video import FPS, VideoStream
 import cv2
+# pylint: disable=import-error
 from modules.center_tracker import CenterTracker
 
-CAM_W = 640
-CAM_H = 480
-CAM_FOV_W = 75 # blue dot, change to 56 for red dot
-CAM_FOV_H = 56.25 # blue dot, change to 42 for red dot
-CAM_FRAMERATE = 30
+CAM_W = int(os.getenv('CAM_W'))
+CAM_H = int(os.getenv('CAM_H'))
+CAM_FOV_W = float(os.getenv('CAM_FOV_W'))
+CAM_FOV_H = float(os.getenv('CAM_FOV_H'))
+CAM_FRAMERATE = int(os.getenv('CAM_FRAMERATE'))
 
 OPENCV_OBJECT_TRACKERS = {
     'csrt': cv2.TrackerCSRT_create,

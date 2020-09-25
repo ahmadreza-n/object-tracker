@@ -11,6 +11,8 @@ from threading import Event
 from queue import Queue
 from time import sleep
 from dotenv import load_dotenv
+load_dotenv()
+# pylint: disable=wrong-import-position
 from modules.object_tracker import TRACKER_CHOISES, ObjectTracker
 from modules.plotter import plotter
 from modules.serial_comm import SerialComm
@@ -18,7 +20,6 @@ from modules.center_tracker import CenterTracker
 #endregion
 
 #region config
-load_dotenv()
 logging.basicConfig(format='[%(levelname)s] (%(threadName)s): %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 

@@ -1,9 +1,10 @@
+import os
 from collections import OrderedDict
 import cv2
 from scipy.spatial import distance as dist
 
-CAM_W = 640
-CAM_H = 480
+CAM_W = int(os.getenv('CAM_W'))
+CAM_H = int(os.getenv('CAM_H'))
 
 class CenterTracker():
   '''
