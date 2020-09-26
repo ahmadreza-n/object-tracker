@@ -56,11 +56,6 @@ void loop()
         }
       }
       tiltErr = tiltIn.toInt();
-      if (abs(tiltErr) <= 2)
-        tiltErr = 0;
-      panErr = panIn.toInt();
-      if (abs(panErr) <= 2)
-        panErr = 0;
 
       tiltOutput = TILT_PID.compute(tiltErr);
       panOutput = PAN_PID.compute(panErr);
