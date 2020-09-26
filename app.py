@@ -53,7 +53,7 @@ readyEvent = Event()
 centerTracker = CenterTracker(ARGS['prototxt'],
                               ARGS['model'],
                               ARGS['confidence'],
-                              maxDisappeared=30)
+                              maxDisappeared=50)
 
 serialThread = SerialComm(inQ=errQ,
                           outQ=pltQ,
