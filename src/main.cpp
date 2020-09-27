@@ -8,18 +8,16 @@ Servo PAN;  // Hor
 #define TILT_PIN D4
 #define PAN_PIN D2
 
-const float Ts = 0.1;
+float Ts{};
 
-const int TILT_INIT_VALUE = 20;
-const int PAN_INIT_VALUE = 90;
+const int TILT_INIT_VALUE{20};
+const int PAN_INIT_VALUE{90};
 
-const double TILT_Kp{0.495}, TILT_Ki{0.457}, TILT_Kd{0};
-PID TILT_PID = PID(TILT_Kp, TILT_Ki, TILT_Kd, 0);
-
-const double PAN_Kp{0.585}, PAN_Ki{0.468}, PAN_Kd{0};
-PID PAN_PID = PID(PAN_Kp, PAN_Ki, PAN_Kd, 0);
+PID TILT_PID = PID(0.5, 0, 0);
+PID PAN_PID = PID(0, 0, 0);
 
 void setDegree(const int &, const int &);
+void setParams(const String &);
 
 void setup()
 {
@@ -37,29 +35,32 @@ String input;
 double tiltErr{}, panErr{};
 int tiltOutput{}, panOutput{};
 String tiltIn{}, panIn{};
+
 void loop()
 {
   if (Serial.available())
   {
     input = Serial.readStringUntil('$');
 
-    if (input == "@")
+    if (input.endsWith("@"))
+    {
+      setParams(input);
+
       Serial.print("@#");
+    }
     else
     {
       for (size_t i = 0; i < input.length(); i++)
-      {
         if (input.charAt(i) == ' ')
         {
           tiltIn = input.substring(0, i);
           panIn = input.substring(i + 1, input.length());
         }
-      }
       tiltErr = tiltIn.toInt();
-      if(abs(tiltErr) <= 2) 
+      if (abs(tiltErr) <= 2)
         tiltErr = 0;
       panErr = panIn.toInt();
-      if(abs(panErr) <= 2) 
+      if (abs(panErr) <= 2)
         panErr = 0;
 
       tiltOutput = TILT_PID.compute(tiltErr);
@@ -94,5 +95,52 @@ void setDegree(const int &tiltOutput, const int &panOutput)
       if (pos >= 2 && pos <= 178)
         PAN.write(pos);
     }
+  }
+}
+
+void setParams(const String &input)
+{
+  String trackerType{};
+  for (size_t i = 0; i < input.length(); i++)
+    if (input.charAt(i) == ' ')
+    {
+      trackerType = input.substring(0, i);
+      break;
+    }
+  if (trackerType == "csrt")
+  {
+    Ts = 0.08;
+    TILT_PID.setParams(0.495, 0.457, 0);
+    PAN_PID.setParams(0.585, 0.468, 0);
+  }
+  else if (trackerType == "kcf")
+  {
+    TILT_PID.setParams(0.225, 0.208, 0);
+    PAN_PID.setParams(0.266, 0.213, 0);
+    Ts = 0.014;
+  }
+  else if (trackerType == "moss")
+  {
+    Ts = 0.0056;
+  }
+  else if (trackerType == "boosting")
+  {
+    Ts = 0.1;
+  }
+  else if (trackerType == "mil")
+  {
+    Ts = 0.09;
+  }
+  else if (trackerType == "tld")
+  {
+    Ts = 0.087;
+  }
+  else if (trackerType == "medianflow")
+  {
+    Ts = 0.0074;
+  }
+  else if (trackerType == "goturn")
+  {
+    Ts = 0.1;
   }
 }

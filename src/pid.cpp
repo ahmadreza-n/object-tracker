@@ -1,9 +1,16 @@
 #include <Arduino.h>
 #include "pid.h"
 
-PID::PID(const double &Kp, const double &Ki, const double &Kd, const double &Ts)
-    : _Kp{Kp}, _Ki{Ki}, _Kd{Kd}, _Ts{Ts}, lastErr{0}, lastTime{0}, maxIntegral{Ki == 0 ? 0 : 180 / Ki}
+PID::PID(const double &Kp, const double &Ki, const double &Kd)
+    : _Kp{Kp}, _Ki{Ki}, _Kd{Kd}, lastErr{0}, lastTime{0}, maxIntegral{Ki == 0 ? 0 : 180 / Ki}
 {
+}
+
+void PID::setParams(const double &Kp, const double &Ki, const double &Kd)
+{
+  _Kp = Kp;
+  _Ki = Ki;
+  _Kd = Kd;
 }
 
 int PID::compute(const double &err)
