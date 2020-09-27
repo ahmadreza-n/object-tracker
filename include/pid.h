@@ -6,8 +6,10 @@
 class PID
 {
 public:
-  PID(const double &, const double &, const double &, const double & Ts=0);
+  PID() = default;
+  PID(const double &, const double &, const double &);
   int compute(const double &);
+  void setParams(const double &, const double &, const double &);
   ~PID() = default;
 
 private:
