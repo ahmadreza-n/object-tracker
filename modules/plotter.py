@@ -1,4 +1,7 @@
 from queue import Queue
+import matplotlib
+matplotlib.use('tkagg')
+# pylint: disable=wrong-import-position
 from matplotlib import pyplot as plt
 
 def plotter(pltQ: Queue):
@@ -35,7 +38,7 @@ def plotter(pltQ: Queue):
       plt.close()
     else:
       plt.show()
-  timer = fig.canvas.new_timer(interval=10)
+  timer = fig.canvas.new_timer(interval=178)
   timer.add_callback(callBack)
   timer.start()
 
