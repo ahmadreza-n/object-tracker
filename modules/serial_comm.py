@@ -12,13 +12,18 @@ SERIAL_ADDRESS = '/dev/ttyUSB0'
 SERIAL_BAUDRATE = 115200
 
 class SerialComm(threading.Thread):
-  def __init__(self, inQ: Queue, outQ: Queue, readyEvent: threading.Event, *args, **kwargs):
+  def __init__(self,
+               inQ: Queue,
+               outQ: Queue,
+               readyEvent: threading.Event,
+               trackerType: str,
+               *args, **kwargs):
     threading.Thread.__init__(self, **kwargs)
     try:
       self.handler = serial.Serial(SERIAL_ADDRESS, timeout=SERIAL_TIMEOUT, baudrate=SERIAL_BAUDRATE)
       self.handler.read_all()
       self.handler.flush()
-      self.handler.write('@$'.encode('utf-8'))
+      self.handler.write(f'{trackerType} @$'.encode('utf-8'))
     except Exception as err:
       logger.error('Serial initialization failed.')
       raise err
@@ -37,7 +42,7 @@ class SerialComm(threading.Thread):
       try:
         serialInput = self.handler.read_until('#'.encode('utf-8')).decode('utf-8')
         logger.info('INPUT: %s', serialInput)
-        if serialInput != '@#':
+        if not serialInput.endswith('@#'):
           tiltOutput, panOutput, _ = serialInput.split(' ')
           pltData['tiltOutput'] = int(tiltOutput)
           pltData['panOutput'] = int(panOutput)

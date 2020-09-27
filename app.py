@@ -7,12 +7,13 @@ python app.py --help
 import os
 import argparse
 import logging
+# pylint: disable=wrong-import-position
+logging.basicConfig(format='[%(levelname)s] (%(threadName)s): %(message)s', level=logging.INFO)
 from threading import Event
 from queue import Queue
 from time import sleep
 from dotenv import load_dotenv
 load_dotenv()
-# pylint: disable=wrong-import-position
 from modules.object_tracker import TRACKER_CHOISES, ObjectTracker
 from modules.plotter import plotter
 from modules.serial_comm import SerialComm
@@ -20,10 +21,6 @@ from modules.center_tracker import CenterTracker
 #endregion
 
 #region config
-logging.basicConfig(format='[%(levelname)s] (%(threadName)s): %(message)s', level=logging.INFO)
-logger = logging.getLogger()
-
-
 ap = argparse.ArgumentParser()
 ap.add_argument('-t', '--tracker', type=str, default='csrt',
                 choices=TRACKER_CHOISES,
@@ -45,6 +42,8 @@ ap.add_argument('-c', '--confidence', type=float, default=0.8,
 ARGS = vars(ap.parse_args())
 SKIP_SERIAL = ARGS['skip_serial'] is None
 SKIP_PLOT = ARGS['skip_plot'] is None
+
+logger = logging.getLogger()
 #endregion
 
 pltQ = Queue()
@@ -58,6 +57,7 @@ centerTracker = CenterTracker(ARGS['prototxt'],
 serialThread = SerialComm(inQ=errQ,
                           outQ=pltQ,
                           readyEvent=readyEvent,
+                          trackerType=ARGS['tracker'],
                           name='SerialCommThread') if not SKIP_SERIAL else None
 
 trackerThread = ObjectTracker(ARGS['tracker'],
