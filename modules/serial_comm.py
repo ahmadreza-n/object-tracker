@@ -1,4 +1,5 @@
 import logging
+import os
 from queue import Queue
 import threading
 from time import time as epochTime
@@ -7,9 +8,9 @@ import serial
 
 logger = logging.getLogger()
 
-SERIAL_TIMEOUT = 2000
-SERIAL_ADDRESS = '/dev/ttyUSB0'
-SERIAL_BAUDRATE = 115200
+SERIAL_TIMEOUT = int(os.getenv('SERIAL_TIMEOUT'))
+SERIAL_ADDRESS = os.getenv('SERIAL_ADDRESS')
+SERIAL_BAUDRATE = int(os.getenv('SERIAL_BAUDRATE'))
 
 class SerialComm(threading.Thread):
   def __init__(self,
@@ -20,7 +21,9 @@ class SerialComm(threading.Thread):
                *args, **kwargs):
     threading.Thread.__init__(self, **kwargs)
     try:
-      self.handler = serial.Serial(SERIAL_ADDRESS, timeout=SERIAL_TIMEOUT, baudrate=SERIAL_BAUDRATE)
+      self.handler = serial.Serial(SERIAL_ADDRESS,
+                                   timeout=SERIAL_TIMEOUT,
+                                   baudrate=SERIAL_BAUDRATE)
       self.handler.read_all()
       self.handler.flush()
       self.handler.write(f'{trackerType} @$'.encode('utf-8'))
