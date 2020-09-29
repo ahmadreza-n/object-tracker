@@ -3,11 +3,12 @@ import logging
 import os
 from queue import Queue
 from time import sleep
-from imutils.video import FPS, VideoStream
+from imutils.video import FPS
 import cv2
 # pylint: disable=import-error
 from modules.center_tracker import CenterTracker
 
+CAM_SRC = int(os.getenv('CAM_SRC'))
 CAM_W = int(os.getenv('CAM_W'))
 CAM_H = int(os.getenv('CAM_H'))
 CAM_FOV_W = float(os.getenv('CAM_FOV_W'))
@@ -40,9 +41,10 @@ class ObjectTracker(threading.Thread):
     threading.Thread.__init__(self, **kwargs)
     try:
       logger.info('starting video stream...')
-      self.videoStream = VideoStream(src=2,
-                                     resolution=(CAM_W, CAM_H),
-                                     framerate=CAM_FRAMERATE).start()
+      self.cap = cv2.VideoCapture(CAM_SRC)
+      self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 0 if CAM_W == 640 else 1)
+      self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 0 if CAM_H == 480 else 1)
+      self.cap.set(cv2.CAP_PROP_FPS, CAM_FRAMERATE)
       sleep(0.1)
       self.serialThread = serialThread
     except Exception as err:
@@ -143,8 +145,8 @@ class ObjectTracker(threading.Thread):
     self.fps2.start()
 
     while True:
-      frame = self.videoStream.read()
-      if frame is None:
+      ret, frame = self.cap.read()
+      if not ret or frame is None:
         break
       if initBB is not None:
         self.track(frame)
@@ -168,6 +170,6 @@ class ObjectTracker(threading.Thread):
     if initBB is not None and self.serialThread:
       self.outQ.put(None)
       self.serialThread.join()
-    self.videoStream.stop()
+    self.cap.release()
     cv2.destroyAllWindows()
     logger.info('thread finished')
