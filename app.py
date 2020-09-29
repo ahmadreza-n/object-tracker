@@ -14,6 +14,8 @@ from queue import Queue
 from time import sleep
 from dotenv import load_dotenv
 load_dotenv()
+import matplotlib
+matplotlib.use('qt5agg')
 from modules.object_tracker import TRACKER_CHOISES, ObjectTracker
 from modules.plotter import plotter
 from modules.serial_comm import SerialComm
@@ -69,8 +71,8 @@ trackerThread = ObjectTracker(ARGS['tracker'],
                               daemon=True)
 trackerThread.start()
 
-if not SKIP_SERIAL and not SKIP_PLOT:
-  plotter(pltQ)
+if not SKIP_SERIAL:
+  plotter(pltQ, mode='normal' if SKIP_PLOT else 'live')
 
 trackerThread.join()
 sleep(1)
