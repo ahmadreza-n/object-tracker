@@ -13,8 +13,8 @@ float Ts{};
 const int TILT_INIT_VALUE{20};
 const int PAN_INIT_VALUE{90};
 
-PID TILT_PID = PID(0.5, 0, 0);
-PID PAN_PID = PID(0, 0, 0);
+PID TILT_PID = PID(0.1, 0, 0);
+PID PAN_PID = PID(0.1, 0, 0);
 
 void setDegree(const int &, const int &);
 void setParams(const String &);
@@ -110,13 +110,13 @@ void setParams(const String &input)
   if (trackerType == "csrt")
   {
     Ts = 0.08;
-    TILT_PID.setParams(0.495, 0.457, 0);
-    PAN_PID.setParams(0.585, 0.468, 0);
+    TILT_PID.setParams(0.405, 0.27, 0.027); // Ku = 0.9, Tu = 1.8
+    PAN_PID.setParams(0.36, 0.216, 0.0216); // Ku = 0.8, Tu = 2
   }
   else if (trackerType == "kcf")
   {
-    TILT_PID.setParams(0.225, 0.208, 0);
-    PAN_PID.setParams(0.266, 0.213, 0);
+    TILT_PID.setParams(0.3, 0.25, 0.01);
+    PAN_PID.setParams(0.3, 0.25, 0.01);
     Ts = 0.014;
   }
   else if (trackerType == "moss")
