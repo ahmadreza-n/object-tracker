@@ -57,10 +57,10 @@ void loop()
           panIn = input.substring(i + 1, input.length());
         }
       tiltErr = tiltIn.toInt();
-      if (abs(tiltErr) <= 2)
+      if (abs(tiltErr) <= 3)
         tiltErr = 0;
       panErr = panIn.toInt();
-      if (abs(panErr) <= 2)
+      if (abs(panErr) <= 3)
         panErr = 0;
 
       tiltOutput = TILT_PID.compute(tiltErr);
@@ -75,26 +75,24 @@ void loop()
 
 void setDegree(const int &tiltOutput, const int &panOutput)
 {
-  const int tiltAbs{abs(tiltOutput)}, panAbs{abs(panOutput)};
-
-  const int maximum{max(tiltAbs, panAbs)};
-  const int panSign{panOutput == 0 ? 0 : panOutput / panAbs},
-      tiltSign{tiltOutput == 0 ? 0 : tiltOutput / tiltAbs};
-  const int tiltCurr{TILT.read()}, panCurr{PAN.read()};
-  for (int i = 0; i < maximum; i++)
+  if (tiltOutput != 0)
   {
-    if (tiltSign != 0 && i < tiltAbs)
-    {
-      const int pos{tiltCurr + tiltSign * i};
-      if (pos >= 3 && pos <= 120)
-        TILT.write(pos);
-    }
-    if (panSign != 0 && i < panAbs)
-    {
-      const int pos{panCurr + panSign * i};
-      if (pos >= 2 && pos <= 178)
-        PAN.write(pos);
-    }
+    int tiltPos{TILT.read() + tiltOutput};
+    if (tiltPos < 3)
+      tiltPos = 3;
+    else if (tiltPos > 120)
+      tiltPos = 120;
+    TILT.write(tiltPos);
+  }
+
+  if (panOutput != 0)
+  {
+    int panPos{PAN.read() + panOutput};
+    if (panPos < 3)
+      panPos = 3;
+    else if (panPos > 177)
+      panPos = 177;
+    PAN.write(panPos);
   }
 }
 
@@ -109,38 +107,40 @@ void setParams(const String &input)
     }
   if (trackerType == "csrt")
   {
-    Ts = 0.08;
-    TILT_PID.setParams(0.405, 0.27, 0.027); // Ku = 0.9, Tu = 1.8
-    PAN_PID.setParams(0.36, 0.216, 0.0216); // Ku = 0.8, Tu = 2
+    TILT_PID.setParams(0.18, 0.065, 0.009); 
+    // Ku = 0.4, Tu = 2
+    // PI = 0.18, 0.108
+    // classic PID = 0.32, 0.24, 0.06
+    // no overshoot = 0.2, 0.08, 0.0534
+    // manual = 0.18, 0.065, 0.009
+    PAN_PID.setParams(0.15, 0.05, 0.0075); 
+    // Ku = 0.3, Tu = 2.4
+    // PI = 0.135, 0.0675
+    // classic PID = 0.18, 0.15, 0.054
+    // no overshoot = 0.15, 0.05, 0.048
+    // manual = 0.15, 0.05, 0.0075
   }
   else if (trackerType == "kcf")
   {
-    TILT_PID.setParams(0.3, 0.25, 0.01);
-    PAN_PID.setParams(0.3, 0.25, 0.01);
-    Ts = 0.014;
+    TILT_PID.setParams(0.1, 0.1, 0.0045);
+    PAN_PID.setParams(0.09, 0.09, 0.0038);
   }
   else if (trackerType == "moss")
   {
-    Ts = 0.0056;
   }
   else if (trackerType == "boosting")
   {
-    Ts = 0.1;
   }
   else if (trackerType == "mil")
   {
-    Ts = 0.09;
   }
   else if (trackerType == "tld")
   {
-    Ts = 0.087;
   }
   else if (trackerType == "medianflow")
   {
-    Ts = 0.0074;
   }
   else if (trackerType == "goturn")
   {
-    Ts = 0.1;
   }
 }
