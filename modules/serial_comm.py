@@ -65,7 +65,7 @@ class SerialComm(threading.Thread):
       logger.info('OUTPUT: %s', serialOutput)
       cps.update()
       cps.stop()
-      pltData['time'] = float(epochTime() - startTime)
+      pltData['time'] = epochTime() - startTime
       pltData['panErr'] = panErr
       pltData['tiltErr'] = tiltErr
 

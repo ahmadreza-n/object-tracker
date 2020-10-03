@@ -36,14 +36,14 @@ ap.add_argument('-p', '--prototxt', type=str,
                 default=os.path.join(os.getcwd(), 'www', 'deploy.prototxt'),
                 help='path to Caffe \'deploy\' prototxt file')
 ap.add_argument('--skip-serial', type=bool, default=False, nargs='?',
-                help='Pass true to skip serial communication')
-ap.add_argument('--skip-plot', type=bool, default=True, nargs='?',
-                help='Pass False to skip plotting.')
+                help='Use to skip serial communication')
+ap.add_argument('--live-plot', type=bool, default=False, nargs='?',
+                help='Use for live plotting.')
 ap.add_argument('-c', '--confidence', type=float, default=0.8,
                 help='minimum probability to filter weak detections')
 ARGS = vars(ap.parse_args())
 SKIP_SERIAL = ARGS['skip_serial'] is None
-SKIP_PLOT = ARGS['skip_plot'] is None
+LIVE_PLOT = ARGS['live_plot'] is None
 
 logger = logging.getLogger()
 #endregion
@@ -72,7 +72,7 @@ trackerThread = ObjectTracker(ARGS['tracker'],
 trackerThread.start()
 
 if not SKIP_SERIAL:
-  plotter(pltQ, mode='normal' if SKIP_PLOT else 'live')
+  plotter(pltQ, mode='live' if LIVE_PLOT else 'normal')
 
 trackerThread.join()
 sleep(1)

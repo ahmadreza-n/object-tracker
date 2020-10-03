@@ -3,9 +3,11 @@ import matplotlib
 matplotlib.use('tkagg')
 # pylint: disable=wrong-import-position
 from matplotlib import pyplot as plt
+from matplotlib.ticker import FormatStrFormatter
 
 def plotter(pltQ: Queue, mode: str):
-  fig, axs = plt.subplots(2)
+  fig, ((panErr, tiltErr), (panOutput, tiltOutput)) = plt.subplots(nrows=2, ncols=2)
+
   timeList = []
   panErrList = []
   panOutputList = []
@@ -28,16 +30,18 @@ def plotter(pltQ: Queue, mode: str):
       if not getData():
         break
 
-      axs[0].plot(timeList, panErrList, label='Pan Error', color='r')
-      axs[0].plot(timeList, panOutputList, label='Pan Controller Output', color='g')
+      panErr.plot(timeList, panErrList, label='Pan Error', color='r')
+      panOutput.plot(timeList, panOutputList, label='Pan Controller Output', color='g')
 
       if len(timeList) == 1:
-        axs[0].legend()
+        panErr.legend()
+        panOutput.legend()
 
-      axs[1].plot(timeList, tiltErrList, label='Tilt Error', color='r')
-      axs[1].plot(timeList, tiltOutputList, label='Tilt Controller Output', color='g')
+      tiltErr.plot(timeList, tiltErrList, label='Tilt Error', color='r')
+      tiltOutput.plot(timeList, tiltOutputList, label='Tilt Controller Output', color='g')
       if len(timeList) == 1:
-        axs[1].legend()
+        tiltErr.legend()
+        tiltOutput.legend()
 
       fig.canvas.draw()
     if len (timeList) ==0:
@@ -55,13 +59,25 @@ def plotter(pltQ: Queue, mode: str):
       if not getData():
         break
 
-    axs[0].plot(timeList, panErrList, label='Pan Error', color='r')
-    axs[0].plot(timeList, panOutputList, label='Pan Controller Output', color='g')
+    panErr.plot(timeList, panErrList, label='Pan Error', color='r')
+    panErr.legend()
+    panOutput.plot(timeList, panOutputList, label='Pan Controller Output', color='g')
+    panOutput.legend()
 
-    axs[0].legend()
+    tiltErr.plot(timeList, tiltErrList, label='Tilt Error', color='r')
+    tiltErr.legend()
+    tiltOutput.plot(timeList, tiltOutputList, label='Tilt Controller Output', color='g')
+    tiltOutput.legend()
 
-    axs[1].plot(timeList, tiltErrList, label='Tilt Error', color='r')
-    axs[1].plot(timeList, tiltOutputList, label='Tilt Controller Output', color='g')
-    axs[1].legend()
+  panErr.xaxis.set_major_formatter(FormatStrFormatter('%.2f s'))
+  panErr.yaxis.set_major_formatter(FormatStrFormatter('%d°'))
 
+  panOutput.xaxis.set_major_formatter(FormatStrFormatter('%.2f s'))
+  panOutput.yaxis.set_major_formatter(FormatStrFormatter('%d°'))
+
+  tiltErr.xaxis.set_major_formatter(FormatStrFormatter('%.2f s'))
+  tiltErr.yaxis.set_major_formatter(FormatStrFormatter('%d°'))
+
+  tiltOutput.xaxis.set_major_formatter(FormatStrFormatter('%.2f s'))
+  tiltOutput.yaxis.set_major_formatter(FormatStrFormatter('%d°'))
   plt.show()
